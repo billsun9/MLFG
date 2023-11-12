@@ -7,6 +7,7 @@ Created on Sat Nov 11 21:12:38 2023
 from Protabank.data_processing import getFilteredDataset
 from Protabank.dataloaders import get_dataloaders, constructVocab
 from Protabank.baselines.MLP import *
+from Protabank.baselines.LSTM import *
 from Protabank.train import train
 from Protabank.utils import plotLosses
 
@@ -23,8 +24,13 @@ models = {"LR":LR(input_size = input_size, output_size = 1),
           "MLP_md":MLP2(input_size = input_size, output_size = 1),
           "MLP_lg":MLP3(input_size = input_size, output_size = 1)}
 
-for model_name, model in models.items():
+lstm_models = {"LSTM1":LSTM1(input_size = input_size, output_size = 1),
+          "LSTM2":LSTM2(input_size = input_size, output_size = 1),
+          # "LSTM_BN1":LSTM_BN1(input_size = input_size, output_size = 1)
+          }
+
+for model_name, model in lstm_models.items():
     print("<" + "-"*25 + ">")
-    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True)
+    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 35)
     plotLosses(model_name, train_losses, test_losses)
     print("{} Loss: {}".format(model_name, test_losses[-1]))
