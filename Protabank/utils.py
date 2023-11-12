@@ -1,3 +1,10 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# weird matplotlib error
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 s = '''
 A	Alanine	
 C	Cysteine	
@@ -29,3 +36,18 @@ def constructAminoAcidMap(s):
     return s
 
 aa_map = constructAminoAcidMap(s)
+
+def plotLosses(name, train_loss, val_loss):
+    plt.plot(list(range(0, len(train_loss))), train_loss, label='train_loss')
+    plt.plot(list(range(0, len(train_loss))), val_loss, label='val_loss')
+    
+    # Adding labels and title
+    plt.xlabel('Epoch')
+    plt.ylabel('MSE')
+    plt.title('{}: Epoch vs MSE'.format(name))
+    
+    # Adding a legend to distinguish between the two lists
+    plt.legend()
+    
+    # Display the plot
+    plt.show()

@@ -8,11 +8,11 @@ import os
 import pandas as pd
 import numpy as np
 
-PATH = './Data/Protabank/Principles for computational design of binding antibodies.csv'
+def getRawDataset(path):
+    print("Reading from: {}".format(path))
+    return pd.read_csv(path)
 
-def getRawDataset(): return pd.read_csv(PATH)
-
-def EDA():
+def EDA1():
     from Protabank.utils import aa_map
     df = getRawDataset()
     
@@ -39,8 +39,6 @@ def EDA():
     print("---"*5)
 
 # 
-def getFilteredDataset():
-    df = getRawDataset()
+def getFilteredDataset(path):
+    df = getRawDataset(path)
     return df.loc[df['Assay/Protocol'] == 'Expression'].reset_index(drop=True)[['Sequence', 'Data']]
-
-df = getFilteredDataset()
