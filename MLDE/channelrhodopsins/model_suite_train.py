@@ -4,6 +4,8 @@ Created on Sat Nov 11 21:12:38 2023
 
 @author: Bill Sun
 """
+import pandas as pd
+import numpy as np
 from Protabank.data_processing import getFilteredDataset
 from Protabank.dataloaders import get_dataloaders, constructVocab
 from Protabank.baselines.MLP import *
@@ -11,11 +13,24 @@ from Protabank.baselines.LSTM import *
 from Protabank.train import train
 from Protabank.utils import plotLosses
 
-PATH = './Data/Protabank/Principles for computational design of binding antibodies.csv'
-dataset = getFilteredDataset(PATH)
+from MLDE.channelrhodopsins.data_preprocessing import clean
+
+PATH = './Data/ChR/pnas.1700269114.sd01.csv'
+
+dataset = pd.read_csv(PATH)
+dataset = dataset[['sequence','mKate_mean','GFP_mean', 'intensity_ratio_mean']]
+dataset = clean(dataset)
+
+print(dataset.columns)
+# %%
 vocab = constructVocab(dataset) # should be 20 AA's + <sos> + <eos>
-max_length = 300 # somewhat arbitrarily chosen
+# df['sequence'].apply(lambda x: len(str(x))).describe()
+max_length = 1100 # somewhat arbitrarily chosen
 train_dataloader, test_dataloader = get_dataloaders(dataset, split_percent = 0.8, max_length = max_length)
+# %%
+print(len(train_dataloader))
+print(len(test_dataloader))
+
 # %%
 input_size = max_length * len(vocab)
 
@@ -31,6 +46,6 @@ lstm_models = {"LSTM1":LSTM1(input_size = input_size, output_size = 1),
 # %%
 for model_name, model in models.items():
     print("<" + "-"*25 + ">")
-    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 2)
+    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 50)
     plotLosses(model_name, train_losses, test_losses)
     print("{} Loss: {}".format(model_name, test_losses[-1]))
