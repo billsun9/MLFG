@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import torchtext.transforms as T
 from torchtext.vocab import build_vocab_from_iterator
 
+from Protabank.utils import random_test_train_split
+
 BATCH_SIZE = 16
 
 def constructVocab(dataset):
@@ -89,12 +91,16 @@ def checkTransform(dataset):
 # dataset is a df with columns Sequence, Data
 def get_dataloaders(dataset, batch_size = 16, split_percent = 0.8, max_length = 1000):
     assert len(dataset) > 10 # prevents any funky business
-    IDX = int(split_percent * len(dataset))
+    
+    train_data, test_data, train_target, test_target = random_test_train_split(
+        dataset, target_column='Data', test_size=0.2, random_seed=42
+    )
+    
     vocab = constructVocab(dataset)
     train_dataset = SeqToFuncDataset(
-        list(dataset['Sequence'][:IDX]), list(dataset['Data'][:IDX]), vocab = vocab, max_length=max_length)
+        list(train_data), list(train_target), vocab = vocab, max_length=max_length)
     test_dataset = SeqToFuncDataset(
-        list(dataset['Sequence'][IDX:]), list(dataset['Data'][IDX:]), vocab = vocab, max_length=max_length)
+        list(test_data), list(test_target), vocab = vocab, max_length=max_length)
     
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size)

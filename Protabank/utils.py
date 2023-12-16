@@ -51,3 +51,21 @@ def plotLosses(name, train_loss, val_loss):
     
     # Display the plot
     plt.show()
+
+# data: DF; target_column: String
+def random_test_train_split(data, target_column, test_size=0.2, random_seed=10):
+    # Set the random seed for reproducibility
+    np.random.seed(random_seed)
+
+    # Shuffle the indices
+    indices = np.random.permutation(data.index)
+
+    # Calculate the split index
+    split_index = int(len(indices) * (1 - test_size))
+
+    # Split the data and target
+    train_indices, test_indices = indices[:split_index], indices[split_index:]
+    train_data, test_data = data.loc[train_indices], data.loc[test_indices]
+    train_target, test_target = train_data.pop(target_column), test_data.pop(target_column)
+
+    return train_data, test_data, train_target, test_target

@@ -25,20 +25,20 @@ class LSTM1(nn.Module):
         x = self.fc(x)
         return x
 
-class LSTM2(nn.Module):
+class BLSTM1(nn.Module):
     def __init__(self, input_size, output_size):
-        super(LSTM2, self).__init__()
-        self.lstm = nn.LSTM(input_size, 256, batch_first=True)
+        super(BLSTM1, self).__init__()
+        self.lstm = nn.LSTM(input_size, 256, bidirectional=True, batch_first=True)
         self.fc = nn.Sequential(
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(2 * 256, 128), # BIDIRECTIONAL
             nn.Linear(128, output_size)
         )
 
     def forward(self, x):
         x, _ = self.lstm(x)
         # Global average pooling
-        x = torch.mean(x, dim=1)
+        x = torch.cat((x[:, -1, :256], x[:, 0, 256:]), dim=1)
         x = self.fc(x)
         return x
 
