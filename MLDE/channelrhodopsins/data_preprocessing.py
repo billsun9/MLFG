@@ -7,7 +7,7 @@ Created on Sun Nov 12 19:08:51 2023
 
 import pandas as pd
 import numpy as np
-
+from MLDE.channelrhodopsins.utils import makeCGRs
 def is_number(s):
     try:
         float(s)
@@ -49,3 +49,16 @@ def clean(df, target):
     print("Dataframe columns: {}".format(df.columns))
     print("No Samples: {}".format(len(df)))
     return df
+
+# %%
+dataset = pd.read_csv('./Data/ChR/pnas.1700269114.sd01.csv')
+dataset = dataset[['sequence','mKate_mean','GFP_mean', 'intensity_ratio_mean']]
+dataset = clean(dataset, 'intensity_ratio_mean')
+
+seqs = []
+
+for i in range(len(dataset)):
+    seq = dataset.iloc[i]['Sequence']
+    seqs.append(seq)
+    
+makeCGRs(seqs, 5)

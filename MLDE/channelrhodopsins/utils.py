@@ -152,10 +152,14 @@ class CGR():
         plt.imshow(cgr_output, cmap=cm.gray_r)
         plt.axis('off')
         plt.savefig("{}_k={}.PNG".format(fp, k))
-        plt.show()
+        # plt.show()
     
         return cgr_output
 
+def makeCGRs(seqs, k=5): # takes list of nucleotide sequences
+    cgr = CGR()
+    for i, seq in enumerate(seqs):
+        cgr.generate_cgr_from_sequence(seq, k, fp="./Data/ChR/CGR/{}".format(i))
 # if __name__ == "__main__":
 #     # Example nucleotide sequence
 #     nucleotide_sequence = dataset.iloc[0]['Sequence']
