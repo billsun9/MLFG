@@ -6,11 +6,11 @@ Created on Sat Nov 11 21:12:38 2023
 """
 import pandas as pd
 import numpy as np
-from Protabank.data_processing import getFilteredDataset
-from Protabank.dataloaders import get_dataloaders, constructVocab
-from Protabank.baselines.MLP import *
-from Protabank.baselines.LSTM import *
-from Protabank.train import train
+
+from MLDE.channelrhodopsins.dataloaders import get_dataloaders, constructVocab
+from MLDE.models.MLP import *
+from MLDE.models.LSTM import *
+from MLDE.channelrhodopsins.train import train
 from Protabank.utils import plotLosses
 
 from MLDE.channelrhodopsins.data_preprocessing import clean
@@ -23,6 +23,7 @@ dataset = clean(dataset, 'GFP_mean')
 # %%
 BATCH_SIZE = 8
 vocab = constructVocab(dataset) # should be 4 Nucleotides's + <sos> + <eos>
+# print(vocab.get_itos())
 # df['Sequence'].apply(lambda x: len(str(x))).describe()
 max_length = 1100 # somewhat arbitrarily chosen
 train_dataloader, test_dataloader = get_dataloaders(dataset, batch_size=BATCH_SIZE, split_percent = 0.8, max_length = max_length)
@@ -52,7 +53,7 @@ loss_data = {
 
 for model_name, model in models.items():
     print("<" + "-"*25 + ">")
-    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 20)
+    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 50)
     # plotLosses(model_name, train_losses, test_losses)
     loss_data[model_name] = {'train': train_losses, 'val': test_losses}
     print("{} Loss: {}".format(model_name, test_losses[-1]))

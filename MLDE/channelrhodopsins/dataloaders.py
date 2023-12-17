@@ -87,18 +87,17 @@ def checkTransform(dataset):
     print("Re-Transformed: {}".format(" ".join(vocab.get_itos()[index] for index in encoded)))
     
 # dataset is a df with columns Sequence, Data
+# split percent is % that is used for training
 def get_dataloaders(dataset, batch_size = 16, split_percent = 0.8, max_length = 1000):
     assert len(dataset) > 10 # prevents any funky business
     
-    train_data, test_data, train_target, test_target = random_test_train_split(
-        dataset, target_column='Data', test_size=0.2, random_seed=42
-    )
+    X_train, X_test, Y_train, Y_test = random_test_train_split(dataset, test_size=1-split_percent)
     
     vocab = constructVocab(dataset)
     train_dataset = SeqToFuncDataset(
-        list(train_data), list(train_target), vocab = vocab, max_length=max_length)
+        X_train, Y_train, vocab = vocab, max_length=max_length)
     test_dataset = SeqToFuncDataset(
-        list(test_data), list(test_target), vocab = vocab, max_length=max_length)
+        X_test, Y_test, vocab = vocab, max_length=max_length)
     
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
