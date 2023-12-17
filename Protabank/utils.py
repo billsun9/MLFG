@@ -53,7 +53,7 @@ def plotLosses(name, train_loss, val_loss):
     plt.show()
 
 # data: DF; target_column: String
-def random_test_train_split(data, target_column, test_size=0.2, random_seed=10):
+def random_test_train_split(data, input_column='Sequence', target_column='Data', test_size=0.2, random_seed=10):
     # Set the random seed for reproducibility
     np.random.seed(random_seed)
 
@@ -68,4 +68,4 @@ def random_test_train_split(data, target_column, test_size=0.2, random_seed=10):
     train_data, test_data = data.loc[train_indices], data.loc[test_indices]
     train_target, test_target = train_data.pop(target_column), test_data.pop(target_column)
 
-    return train_data, test_data, train_target, test_target
+    return list(train_data[input_column]), list(test_data[input_column]), list(train_target), list(test_target)
