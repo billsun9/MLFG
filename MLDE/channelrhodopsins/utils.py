@@ -89,113 +89,85 @@ class NucleotideToAA:
         amino_acids_result = self.translate_dna_to_amino_acids(dna_sequence)
         print("DNA sequence:", dna_sequence)
         print("Amino acids:", amino_acids_result)
+# %%
+import collections
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
-        
-# # %%
-# import sys
-# import os
-# from collections import defaultdict
-# import matplotlib.pyplot as plt
+class CGR():
+    def __init__(self): pass
 
-# CGR_X_MAX = 1
-# CGR_Y_MAX = 1
-# CGR_X_MIN = 0
-# CGR_Y_MIN = 0
-# CGR_A = (CGR_X_MIN, CGR_Y_MIN)
-# CGR_T = (CGR_X_MAX, CGR_Y_MIN)
-# CGR_G = (CGR_X_MAX, CGR_Y_MAX)
-# CGR_C = (CGR_X_MIN, CGR_Y_MAX)
-# CGR_CENTER = ((CGR_X_MAX - CGR_Y_MIN) / 2, (CGR_Y_MAX - CGR_Y_MIN) / 2)
+    def count_kmers(self, sequence, k):
+        d = collections.defaultdict(int)
+        for i in range(len(sequence) - (k - 1)):
+            d[sequence[i:i + k]] += 1
+        return d
 
-# def empty_dict():
-# 	"""
-# 	None type return vessel for defaultdict
-# 	:return:
-# 	"""
-# 	return None
+    def probabilities(self, sequence, kmer_count, k):
+        probabilities = collections.defaultdict(float)
+        N = len(sequence)
+        for key, value in kmer_count.items():
+            probabilities[key] = float(value) / (N - k + 1)
+        return probabilities
 
+    def chaos_game_representation(self, probabilities, k):
+        array_size = int(math.sqrt(4 ** k))
+        chaos = []
+        for i in range(array_size):
+            chaos.append([0] * array_size)
+        maxx = array_size
+        maxy = array_size
+        posx = 1
+        posy = 1
+        for key, value in probabilities.items():
+            for char in key:
+                if char == "T":
+                    posx += maxx / 2
+                elif char == "C":
+                    posy += maxy / 2
+                elif char == "G":
+                    posx += maxx / 2
+                    posy += maxy / 2
+                maxx /= 2
+                maxy /= 2
 
-# CGR_DICT = defaultdict(
-# 	empty_dict,
-# 	[
-# 		('A', CGR_A),  # Adenine
-# 		('T', CGR_T),  # Thymine
-# 		('G', CGR_G),  # Guanine
-# 		('C', CGR_C),  # Cytosine
-# 		('U', CGR_T),  # Uracil demethylated form of thymine
-# 		('a', CGR_A),  # Adenine
-# 		('t', CGR_T),  # Thymine
-# 		('g', CGR_G),  # Guanine
-# 		('c', CGR_C),  # Cytosine
-# 		('u', CGR_T)  # Uracil/Thymine
-# 		]
-# )
+            chaos[int(posy - 1)][int(posx - 1)] = value
+            maxx = array_size
+            maxy = array_size
+            posx = 1
+            posy = 1
+        m = float(np.amax(chaos))
+        c = np.array(chaos) / m
+        return c
 
-# def mk_cgr(seq):
-# 	"""Generate cgr
-
-# 	:param seq: list of nucleotide
-# 	:return cgr: [['nt', (x, y)]] List[List[Tuple(float, float)]]
-# 	"""
-# 	cgr = []
-# 	cgr_marker = CGR_CENTER[:
-# 		]    # The center of square which serves as first marker
-# 	for s in seq:
-# 		cgr_corner = CGR_DICT[s]
-# 		if cgr_corner:
-# 			cgr_marker = (
-# 				(cgr_corner[0] + cgr_marker[0]) / 2,
-# 				(cgr_corner[1] + cgr_marker[1]) / 2
-# 			)
-# 			cgr.append([s, cgr_marker])
-# 		else:
-# 			sys.stderr.write("Bad Nucleotide: " + s + " \n")
-
-# 	return cgr
-
-
-# def mk_plot(cgr, name, figid):
-# 	"""Plotting the cgr
-# 		:param cgr: [(A, (0.1, 0.1))]
-# 		:param name: str
-# 		:param figid: int
-# 		:return dict: {'fignum': figid, 'title': name, 'fname': helper.slugify(name)}
-# 	"""
-# 	x_axis = [i[1][0] for i in cgr]
-# 	y_axis = [i[1][1] for i in cgr]
-# 	plt.figure(figid)
-# 	plt.title("Chaos Game Representation\n" + name, wrap=True)
-# 	# diagonal and vertical cross
-# 	# plt.plot([x1, x2], [y1, y2])
-# 	# plt.plot([0.5,0.5], [0,1], 'k-')
-# 	plt.plot([CGR_CENTER[0], CGR_CENTER[0]], [0, CGR_Y_MAX], 'k-')
-
-# 	# plt.plot([0,1], [0.5,0.5], 'k-')
-# 	plt.plot([CGR_Y_MIN, CGR_X_MAX], [CGR_CENTER[1], CGR_CENTER[1]], 'k-')
-# 	plt.scatter(x_axis, y_axis, alpha=0.5, marker='.')
-
-# 	return {'fignum': figid, 'title': name, 'fname': name}
-
-
-# def write_figure(fig, output_dir, dpi=300):
-# 	"""Write plot to png
-# 	:param fig:  {'fignum':figid, 'title':name, 'fname':helper.slugify(name)}
-# 	:param dpi: int dpi of output
-# 	:param output_dir: str
-
-# 	Usage:
-# 		figures = [mk_plot(cgr) for cgr in all_cgr]
-# 		for fig in figures:
-# 			write_figure(fig, "/var/tmp/")
-# 		The figid in the mk_plot's return dict must be present in plt.get_fignums()
-# 	"""
-# 	all_figid = plt.get_fignums()
-# 	if fig['fignum'] not in all_figid:
-# 		raise ValueError("Figure %i not present in figlist" % fig['fignum'])
-# 	plt.figure(fig['fignum'])
-# 	target_name = os.path.join(
-# 		output_dir,
-# 		fig['fname'] + ".png"
-# 	)
-# 	plt.savefig(target_name, dpi=dpi)
+    def generate_cgr_from_sequence(self, sequence, k, fp="CGR"):
+        kmers = self.count_kmers(sequence, k)
+        kmers_prob = self.probabilities(sequence, kmers, k)
+        cgr_output = self.chaos_game_representation(kmers_prob, k)
     
+        plt.figure(figsize=(12, 12))
+    
+        plt.imshow(cgr_output, cmap=cm.gray_r)
+        plt.axis('off')
+        plt.savefig("{}_k={}.PNG".format(fp, k))
+        plt.show()
+    
+        return cgr_output
+
+# if __name__ == "__main__":
+#     # Example nucleotide sequence
+#     nucleotide_sequence = dataset.iloc[0]['Sequence']
+
+#     # Example k-mer size
+#     k = 5
+
+#     # Create CGR object
+#     cgr = CGR()
+
+#     # Generate chaos game representation from the nucleotide sequence
+#     cgr.generate_cgr_from_sequence(nucleotide_sequence, k)
+
+#     # Display the CGR plot
+#      #cgr.show()
