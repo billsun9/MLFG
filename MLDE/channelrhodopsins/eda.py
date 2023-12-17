@@ -49,3 +49,11 @@ def clean(df, target):
     print("Dataframe columns: {}".format(df.columns))
     print("No Samples: {}".format(len(df)))
     return df
+# %%
+d = {}
+
+for num in q:
+    try: d[num] += 1
+    except KeyError: d[num] = 1
+
+

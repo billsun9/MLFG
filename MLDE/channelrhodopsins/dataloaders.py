@@ -6,8 +6,6 @@ from torchtext.vocab import build_vocab_from_iterator
 
 from Protabank.utils import random_test_train_split
 
-BATCH_SIZE = 16
-
 def constructVocab(dataset):
     def getTokens(iter):
         for ite in iter: return [ch for ch in ite]
