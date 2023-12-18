@@ -14,12 +14,12 @@ from MLDE.channelrhodopsins.train import train
 from Protabank.utils import plotLosses
 
 from MLDE.channelrhodopsins.data_preprocessing import clean
-
+from MLDE.evaluate_r2 import r2_evaluate
 PATH = './Data/ChR/pnas.1700269114.sd01.csv'
 
 dataset = pd.read_csv(PATH)
 dataset = dataset[['sequence','mKate_mean','GFP_mean', 'intensity_ratio_mean']]
-dataset = clean(dataset, 'intensity_ratio_mean')
+dataset = clean(dataset, 'mKate_mean')
 # %%
 BATCH_SIZE = 8
 vocab = constructVocab(dataset) # should be 4 Nucleotides's + <sos> + <eos>
@@ -51,9 +51,9 @@ loss_data = {
     # Add more experiments as needed
 }
 
-for model_name, model in lstm_models.items():
+for model_name, model in models.items():
     print("<" + "-"*25 + ">")
-    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 5)
+    train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 30)
     # plotLosses(model_name, train_losses, test_losses)
     loss_data[model_name] = {'train': train_losses, 'val': test_losses}
     print("{} Loss: {}".format(model_name, test_losses[-1]))
@@ -84,35 +84,9 @@ plt.tight_layout()
 # Show the plot
 plt.show()
 # %%
-import torch
-from sklearn.metrics import r2_score
 
-def evaluate(model, dataloader):
-    model.eval()  # Set the model to evaluation mode
-
-    all_predictions = []
-    all_targets = []
-
-    with torch.no_grad():
-        for batch in dataloader:
-            inputs = batch['sequence'].float()
-            targets = batch['target'].view(-1, 1).float()
-            outputs = model(inputs)
-
-            all_predictions.append(outputs)
-            all_targets.append(targets)
-
-    # Concatenate predictions and targets
-    all_predictions = np.concatenate(all_predictions)
-    all_targets = np.concatenate(all_targets)
-    # print(all_predictions.shape)
-    # print(all_targets.shape)
-    r2 = r2_score(all_targets, all_predictions)
-    
-    return r2
-
-for name in lstm_models:
-    output = evaluate(lstm_models[name], test_dataloader)
+for name in models:
+    output = r2_evaluate(models[name], test_dataloader)
     print("{} R^2 Score:".format(name), output)
 
 

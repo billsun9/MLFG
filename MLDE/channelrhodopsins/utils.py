@@ -146,13 +146,14 @@ class CGR():
         kmers = self.count_kmers(sequence, k)
         kmers_prob = self.probabilities(sequence, kmers, k)
         cgr_output = self.chaos_game_representation(kmers_prob, k)
-    
-        plt.figure(figsize=(12, 12))
-    
-        plt.imshow(cgr_output, cmap=cm.gray_r)
-        plt.axis('off')
-        plt.savefig("{}_k={}.PNG".format(fp, k))
-        # plt.show()
+        
+        if fp:
+            plt.figure(figsize=(12, 12))
+        
+            plt.imshow(cgr_output, cmap=cm.gray_r)
+            plt.axis('off')
+            plt.savefig("{}_k={}.PNG".format(fp, k))
+            # plt.show()
     
         return cgr_output
 
@@ -160,18 +161,3 @@ def makeCGRs(seqs, k=5): # takes list of nucleotide sequences
     cgr = CGR()
     for i, seq in enumerate(seqs):
         cgr.generate_cgr_from_sequence(seq, k, fp="./Data/ChR/CGR/{}".format(i))
-# if __name__ == "__main__":
-#     # Example nucleotide sequence
-#     nucleotide_sequence = dataset.iloc[0]['Sequence']
-
-#     # Example k-mer size
-#     k = 5
-
-#     # Create CGR object
-#     cgr = CGR()
-
-#     # Generate chaos game representation from the nucleotide sequence
-#     cgr.generate_cgr_from_sequence(nucleotide_sequence, k)
-
-#     # Display the CGR plot
-#      #cgr.show()
