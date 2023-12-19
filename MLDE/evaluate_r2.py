@@ -26,8 +26,5 @@ def r2_evaluate(model, dataloader):
     # Concatenate predictions and targets
     all_predictions = np.concatenate(all_predictions)
     all_targets = np.concatenate(all_targets)
-    # print(all_predictions.shape)
-    # print(all_targets.shape)
-    r2 = r2_score(all_targets, all_predictions)
     
-    return r2
+    return r2_score(all_targets, all_predictions)

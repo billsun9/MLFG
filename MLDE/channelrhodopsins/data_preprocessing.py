@@ -22,7 +22,7 @@ def check(df):
         if len(set([s.lower() for s in ex['sequence']])) != 4:
             print("Sussy behavior", i, set(ex['sequence']))
             break
-        
+
         if not is_number(ex['mKate_mean']):
             # print(i, ex['mKate_mean'])
             badIdxs.add(i)
@@ -50,15 +50,12 @@ def clean(df, target):
     print("No Samples: {}".format(len(df)))
     return df
 
-# %%
-dataset = pd.read_csv('./Data/ChR/pnas.1700269114.sd01.csv')
-dataset = dataset[['sequence','mKate_mean','GFP_mean', 'intensity_ratio_mean']]
-dataset = clean(dataset, 'intensity_ratio_mean')
-
-seqs = []
-
-for i in range(len(dataset)):
-    seq = dataset.iloc[i]['Sequence']
-    seqs.append(seq)
-    
-makeCGRs(seqs, 5)
+# takes a pandas df as input
+def constructCGRExamples(dataset):
+    seqs, Y = [], []
+    for i in range(len(dataset)):
+        seq = dataset.iloc[i]['Sequence']
+        seqs.append(seq)
+        y = dataset.iloc[i]['Data']
+        Y.append(y)
+    return makeCGRs(seqs, 5), Y

@@ -1,3 +1,5 @@
+import os   
+
 class NucleotideToAA:
     def __init__(self):
 
@@ -142,7 +144,7 @@ class CGR():
         c = np.array(chaos) / m
         return c
 
-    def generate_cgr_from_sequence(self, sequence, k, fp="CGR"):
+    def generate_cgr_from_sequence(self, sequence, k, fp=None):
         kmers = self.count_kmers(sequence, k)
         kmers_prob = self.probabilities(sequence, kmers, k)
         cgr_output = self.chaos_game_representation(kmers_prob, k)
@@ -152,12 +154,20 @@ class CGR():
         
             plt.imshow(cgr_output, cmap=cm.gray_r)
             plt.axis('off')
-            plt.savefig("{}_k={}.PNG".format(fp, k))
+            plt.savefig(fp)
             # plt.show()
     
         return cgr_output
 
-def makeCGRs(seqs, k=5): # takes list of nucleotide sequences
+# takes list of nucleotide sequences; potentially saves to save directory
+def makeCGRs(seqs, k=5, save_dir=""):
     cgr = CGR()
+    res = []
     for i, seq in enumerate(seqs):
-        cgr.generate_cgr_from_sequence(seq, k, fp="./Data/ChR/CGR/{}".format(i))
+        if save_dir:
+            save_fp = os.path.join(save_dir, "{}_k={}.png".format(i,k))
+            output = cgr.generate_cgr_from_sequence(seq, k, fp=save_fp)
+        else:
+            output = cgr.generate_cgr_from_sequence(seq, k)
+        res.append(output)
+    return res

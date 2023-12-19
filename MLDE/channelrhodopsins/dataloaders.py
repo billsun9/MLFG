@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torchtext.transforms as T
 from torchtext.vocab import build_vocab_from_iterator
 
+from MLDE.channelrhodopsins.utils import CGR
 from Protabank.utils import random_test_train_split
 
 def constructVocab(dataset):
@@ -16,6 +17,22 @@ def constructVocab(dataset):
         special_first=True
     )
 
+class CGRToFuncDataset(Dataset):
+    def __init__(self, cgrs, targets, k):
+        self.cgr_constructor = CGR()
+        self.cgrs = cgrs
+        self.targets = targets
+        self.k = k
+
+    def __len__(self):
+        return len(self.cgrs)
+
+    def __getitem__(self, idx):
+        tmp = self.cgr_constructor.generate_cgr_from_sequence(self.cgrs[idx], k=self.k)
+        cgr = torch.from_numpy(tmp).float()
+        target = torch.tensor(self.targets[idx]).float()
+        return {'sequence': cgr, 'target': target}
+    
 class SeqToFuncDataset(Dataset):
     def __init__(self, sequences, targets, vocab, max_length):
         self.sequences = sequences
@@ -88,20 +105,26 @@ def checkTransform(dataset):
     
 # dataset is a df with columns Sequence, Data
 # split percent is % that is used for training
-def get_dataloaders(dataset, batch_size = 16, split_percent = 0.8, max_length = 1000):
+def get_dataloaders(dataset, format, batch_size = 16, split_percent = 0.8, max_length = 1000):
     assert len(dataset) > 10 # prevents any funky business
     
     X_train, X_test, Y_train, Y_test = random_test_train_split(dataset, test_size=1-split_percent)
-    
-    vocab = constructVocab(dataset)
-    train_dataset = SeqToFuncDataset(
-        X_train, Y_train, vocab = vocab, max_length=max_length)
-    test_dataset = SeqToFuncDataset(
-        X_test, Y_test, vocab = vocab, max_length=max_length)
-    
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
-    
+    if format == 'onehot':
+        vocab = constructVocab(dataset)
+        train_dataset = SeqToFuncDataset(
+            X_train, Y_train, vocab = vocab, max_length=max_length)
+        test_dataset = SeqToFuncDataset(
+            X_test, Y_test, vocab = vocab, max_length=max_length)
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+    elif format == 'cgr':
+        train_dataset = CGRToFuncDataset(X_train, Y_train, k=5)
+        test_dataset = CGRToFuncDataset(X_test, Y_test, k=5)
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+    else: raise ValueError("Some incorrect data format is being requested")
     return train_dataloader, test_dataloader
 
 # checkTransform(dataset)
