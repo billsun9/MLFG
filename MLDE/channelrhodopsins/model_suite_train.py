@@ -6,7 +6,6 @@ Created on Sat Nov 11 21:12:38 2023
 """
 import pandas as pd
 import numpy as np
-from scipy.stats import zscore
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +22,7 @@ PATH = './Data/ChR/pnas.1700269114.sd01.csv'
 
 dataset = pd.read_csv(PATH)
 dataset = dataset[['sequence','mKate_mean','GFP_mean', 'intensity_ratio_mean']]
-dataset = clean(dataset, 'GFP_mean')
+dataset = clean(dataset, 'mKate_mean')
 # tee hee
 dataset['Data'] = 100 * dataset['Data']
 # %%
@@ -36,21 +35,30 @@ train_dataloader, test_dataloader = get_dataloaders(dataset, format="cgr", batch
 # %%
 input_size = max_length * len(vocab)
 
-linear_models = {"LR":LR(input_size = input_size, output_size = 1),
-          "MLP_sm":MLP1(input_size = input_size, output_size = 1),
-          "MLP_md":MLP2(input_size = input_size, output_size = 1),
-          "MLP_lg":MLP3(input_size = input_size, output_size = 1)}
+linear_models = {
+    "LR":LR(input_size = input_size, output_size = 1),
+    "MLP_sm":MLP1(input_size = input_size, output_size = 1),
+    "MLP_md":MLP2(input_size = input_size, output_size = 1),
+    "MLP_lg":MLP3(input_size = input_size, output_size = 1)
+    }
 
 lstm_models = {
-    "BLSTM1":BLSTM1(input_size = input_size, output_size = 1),
     "LSTM1":LSTM1(input_size = input_size, output_size = 1),
+    "LSTM2":LSTM2(input_size = input_size, output_size = 1),
+    "BLSTM1":BLSTM1(input_size = input_size, output_size = 1),
           # "LSTM_BN1":LSTM_BN1(input_size = input_size, output_size = 1)
           }
 
 cnn_models = {
-    "CNN1": ShallowCNN(),
-    "CNN2": DeepCNN()
+    "CNN1": EvenShallowerCNN(),
+    "CNN2": ShallowCNN(),
+    "CNN3": DeepCNN()
     }
+
+loss_data = {
+    # Add more experiments as needed
+}
+
 # %%
 def model_eval(model_dict):
     for name in model_dict:
@@ -61,25 +69,28 @@ def model_eval(model_dict):
         print("Test {} R^2 Score:".format(name), round(output,6))
 # %%
 # DATALOADERS MUST BE SET TO PROPER FORMAT!!!!!!!!!!
-def train_plot_eval(model_dict):
-    # Your dictionary mapping experiment to train and val losses
-    loss_data = {
-        # Add more experiments as needed
-    }
 
-    for model_name, model in cnn_models.items():
+def train_eval(model_dict, num_epochs = 50, retry=False):
+    # Your dictionary mapping experiment to train and val losses
+    # experiments = [model_name + "_e=" + str(num_epochs) for model_name in model_dict]
+    for model_name, model in model_dict.items():
         print("<" + "-"*25 + ">")
-        train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = 50)
-        # plotLosses(model_name, train_losses, test_losses)
-        loss_data[model_name] = {'train': train_losses, 'val': test_losses}
-        print("{} Loss: {}".format(model_name, test_losses[-1]))
-        
+        if model_name + "_e=" + str(num_epochs) in loss_data and not retry: continue
+        train_losses, test_losses = train(model, train_dataloader, test_dataloader, verbose = True, num_epochs = num_epochs)
+        loss_data[model_name + "_e=" + str(num_epochs)] = {'train': train_losses, 'val': test_losses}
+        print("[{} Val Loss: {}]".format(model_name, test_losses[-1]))
+    model_eval(model_dict)
+
+def plot_graphs(model_dict, num_epochs):
+    # Iterate through experiments and plot on subplots
+    datapoints = {model_name+"_e="+str(num_epochs):loss_data[model_name+"_e="+str(num_epochs)] for model_name in model_dict}
+    # print(datapoints)
+    print(len(datapoints))
     # Create subplots with a single row
-    num_experiments = len(loss_data)
+    num_experiments = len(model_dict)
     fig, axes = plt.subplots(ncols=num_experiments, figsize=(4 * num_experiments, 4))
     
-    # Iterate through experiments and plot on subplots
-    for i, (experiment, losses) in enumerate(loss_data.items()):
+    for i, (experiment, losses) in enumerate(datapoints.items()):
         # Plot training loss
         axes[i].plot(losses['train'], label='Train Loss', marker='o')
         
@@ -99,5 +110,3 @@ def train_plot_eval(model_dict):
     # plt.suptitle("MLPs Performance in Predicting Expression")
     # Show the plot
     plt.show()
-    
-    model_eval(cnn_models)
